@@ -29,7 +29,7 @@ def create_token(token_string):
     if token_string in special_operators:
         return Token("special", token_string)
     elif token_string[0] in ["'", '"']:
-        return Token("string", token_string[1:-1])
+        return Token("string", token_string[1:-1].replace("\\'", "'"))
     elif token_string[0] in open_char_to_close:
         return Token("group", tokenize(token_string[1:-1]))
     elif (number := is_number(token_string)):
@@ -81,40 +81,43 @@ def condense(tokens):
         else:
             new_tokens.append(token)
 
-    tokens = new_tokens
-    new_tokens = []
+    # The following code automatically groups csvs (e.g. 1 2, 3 4 => 1 (2, 3) 4)
+    # Removing because this method makes it very difficult to do expressions
 
-    keep_appending = True
-    group = []
-    skip_comma = False
-    for i in range(len(tokens)):
-        if tokens[i].type == "special" and tokens[i].value == ",":
-            if ((i > 0 and tokens[i - 1].type in ["statement", "clause", "operator", "function"]) or 
-                (i < len(tokens) - 1 and tokens[i + 1].type in ["statment", "clause", "operator", "function"])):
-                skip_comma = True
-            else:
-                keep_appending = True
-                continue
+    # tokens = new_tokens
+    # new_tokens = []
 
-        if not keep_appending:
-            if not group:
-                pass
-            elif len(group) == 1:
-                new_tokens.append(group[0])
-            else:
-                new_tokens.append(Token("group", group))
-            group = []
-            keep_appending = True
+    # keep_appending = True
+    # group = []
+    # skip_comma = False
+    # for i in range(len(tokens)):
+    #     if tokens[i].type == "special" and tokens[i].value == ",":
+    #         if ((i > 0 and tokens[i - 1].type in ["statement", "clause", "operator", "function"]) or 
+    #             (i < len(tokens) - 1 and tokens[i + 1].type in ["statment", "clause", "operator", "function"])):
+    #             skip_comma = True
+    #         else:
+    #             keep_appending = True
+    #             continue
+
+    #     if not keep_appending:
+    #         if not group:
+    #             pass
+    #         elif len(group) == 1:
+    #             new_tokens.append(group[0])
+    #         else:
+    #             new_tokens.append(Token("group", group))
+    #         group = []
+    #         keep_appending = True
         
-        if keep_appending:
-            group.append(tokens[i]) if not skip_comma else None
-            skip_comma = False
-            keep_appending = False
+    #     if keep_appending:
+    #         group.append(tokens[i]) if not skip_comma else None
+    #         skip_comma = False
+    #         keep_appending = False
 
-    if len(group) == 1:
-        new_tokens.append(group[0])
-    else:
-        new_tokens.append(Token("group", group))
+    # if len(group) == 1:
+    #     new_tokens.append(group[0])
+    # else:
+    #     new_tokens.append(Token("group", group))
 
     return new_tokens
 
@@ -149,7 +152,9 @@ def tokenize(query_string):
             while left != 0:
                 token += char
                 char = pop()
-                if char == closing:
+                if token[-1] == "\\":
+                    pass
+                elif char == closing:
                     left -= 1
                 elif char == opening:
                     left += 1
@@ -163,4 +168,4 @@ def tokenize(query_string):
     return tokens
 
 if __name__ == "__main__":
-    print(tokenize("SELECT COUNT(DISTINCT Country(From Country)) FROM Customers;"))
+    print(tokenize("1, 2, 3"))
