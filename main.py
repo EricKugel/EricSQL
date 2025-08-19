@@ -3,6 +3,9 @@ from pathlib import Path
 
 from database import Database
 
+import parser
+import query
+
 cwd = Path.cwd()
 
 databases = [file for file in cwd.iterdir() if file.is_file() and os.path.basename(file).endswith("db")]
@@ -23,3 +26,8 @@ else:
 
 db = Database(db_file)
 print("Starting database " + db.name)
+
+for query in query.create_queries(parser.tokenize("""SELECT * FROM CUSTOMERS"""), db):
+    print(query.execute())
+
+db.write_out()
