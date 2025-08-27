@@ -14,16 +14,17 @@ class Statement():
         self.tokens = tokens
         self.clauses = []
 
+    def find_clause(self, clause_type, optional=False):
+        for clause in self.clauses:
+            if isinstance(clause, clause_type):
+                return clause
+        if not optional:
+            raise Exception(f"{self.__class__.__name__} statements require a {clause_type.__name__} clause")
+        return None
+
 class Select(Statement):
     def execute(self, database):
-        from_clause = None
-        for clause in self.clauses:
-            if isinstance(clause, From):
-                from_clause = clause
-                break
-        else:
-            raise Exception("Select statements require From clauses")
-
+        from_clause = self.find_clause(From)
         table = from_clause.get_table(database)
 
         if self.tokens[0].type == "function":
@@ -66,15 +67,21 @@ class InsertInto(Statement):
             columns = list(map(lambda t: t.value, flatten_tokens(self.tokens[1:])))
             columns = table.search_for_columns(columns)
 
-        values_clause = None
-        for clause in self.clauses:
-            if isinstance(clause, Values):
-                values_clause = clause
-                break
-        else:
-            raise Exception("INSERT INTO statements require a Values clause")
-        
+        values_clause = self.find_clause(Values)
         rows = values_clause.get_rows(columns)
 
         new_df = pd.DataFrame(rows, columns=columns)
         table.data = pd.concat((table.data, new_df))
+
+class Delete(Statement):
+    def execute(self, database):
+        from_clause = self.find_clause(From)
+        table = from_clause.get_table(database)
+    
+        where_clause = self.find_clause(Where, optional=True)
+        if not where_clause:
+            table.data = table.data.head(0)
+        else:
+            where_clause.stop_snooping()
+            rows = where_clause.find(table)
+            table.data = table.data[~rows]

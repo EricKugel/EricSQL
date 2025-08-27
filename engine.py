@@ -1,28 +1,12 @@
 from inspect import signature
 
-from parser import Token, tokenize
 from operators import lambdas, precedence
 from functions import *
 
+from parser import Token
+
 function_factory = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))(f[1:])
-function_find_class = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))
-
-def flatten_tokens(tokens):
-    if isinstance(tokens, Token) and tokens.type != "group":
-        return [tokens]
-    elif isinstance(tokens, Token):
-        tokens = [tokens]
-
-    all_tokens = []
-    for token in tokens:
-        if token.type == "group":
-            all_tokens.extend(flatten_tokens(token.value))
-        elif token.type == "special":
-            continue
-        else:
-            all_tokens.append(token)
-
-    return all_tokens
+function_find_class = lambda f: eval("".join(map(str.capitalize, f.value.split(" "))))
 
 def get_precedence(operator):
     if operator in precedence:
@@ -42,20 +26,32 @@ def shunting_yard(tokens):
             stack.append(token)
         elif token.type == "function":
             func_class = function_find_class(token)
-            # if not func_class.scalar:
-            #     raise Exception("Something went wrong. This should be scalar.")
+            if not func_class.scalar:
+                raise Exception("Something went wrong. This should be scalar.")
             function_stack.append(token)
         elif token.type == "group":
             output.extend(shunting_yard(token.value))
-            output.extend(function_stack)
+            output.extend(function_stack[::-1])
             function_stack = []
         elif token.type == "special":
-            continue
+            output.extend(stack[::-1])
+            stack = []
         else:
             output.append(token)
 
-    output.extend(stack)
+    output.extend(stack[::-1])
     return output
+
+def create_function(tokens, table):
+    tokens = shunting_yard(tokens)
+    new_tokens = []
+    for token in tokens:
+        if token.type == "unknown":
+            _, name = table.find_column(token.value)
+            new_tokens.append(Token("unknown", name))
+        else:
+            new_tokens.append(token)
+    return lambda args: evaluate(new_tokens, args)
 
 def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
@@ -64,6 +60,8 @@ def evaluate(tokens, args):
     stack = []
     for token in tokens:
         if token.type not in ["operator", "function"]:
+            if token.type == "unknown":
+                token = Token("unknown", args[token.value])
             stack.append(token)
         else:
             func = None
@@ -83,6 +81,7 @@ def evaluate(tokens, args):
     return stack[0]
 
 if __name__ == "__main__":
-    tokens = tokenize("1+3*2")
-    print(tokens)
-    print(evaluate(shunting_yard(tokens), {}))
+    # tokens = tokenize("min(sum(sum(1, 2)))")
+    # print("  ".join(map(lambda t: str(t.value), shunting_yard(tokens))))
+    # print(evaluate(shunting_yard(tokens), {}))
+    pass

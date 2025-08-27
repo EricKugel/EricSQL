@@ -1,4 +1,4 @@
-from engine import flatten_tokens
+from helpers import flatten_tokens
 
 class Function():
     def __init__(self, tokens):
@@ -26,6 +26,11 @@ class Count(Function):
             df = df.drop_duplicates()
         
         return len(df)
+    
+class Min(Function):
+    args = -1
+    def execute(self, table):
+        pass
 
 # TODO: Expressions
 # TODO: What is numeric?

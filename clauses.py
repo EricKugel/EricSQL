@@ -1,4 +1,5 @@
-from engine import flatten_tokens
+from engine import *
+from helpers import flatten_tokens
 
 from table import Table
 
@@ -6,6 +7,12 @@ class Clause():
     snoop = False
     def __init__(self, tokens):
         self.tokens = tokens
+
+    def dud(self, result):
+        return result
+
+    def stop_snooping(self):
+        self.snoop_callback = self.dud
 
 # TODO: Multiple sources (i.e. more than one table)
 class From(Clause):
@@ -53,3 +60,13 @@ class Values(Clause):
         for i in range(0, len(values), (length := len(columns))):
             rows.append(values[i:i + length])
         return rows
+    
+class Where(Clause):
+    snoop = True
+    def snoop_callback(self, result):
+        result.data = result.data[self.find(result)]
+        return result
+
+    def find(self, result):
+        tester = create_function(self.tokens, result)
+        return result.data.apply(lambda row: tester(row.to_dict()), axis=1)

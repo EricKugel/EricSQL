@@ -28,7 +28,8 @@ open_char_to_close = {
 def create_token(token_string):
     def is_number(string):
         try:
-            return float(string)
+            float(string)
+            return True
         except ValueError:
             return False
 
@@ -38,8 +39,8 @@ def create_token(token_string):
         return Token("string", token_string[1:-1].replace("\\'", "'"))
     elif token_string[0] in open_char_to_close:
         return Token("group", tokenize(token_string[1:-1]))
-    elif (number := is_number(token_string)):
-        return Token("number", number)
+    elif is_number(token_string):
+        return Token("number", float(token_string))
     elif token_string.lower() in keywords:
         token_string = token_string.lower()
         if token_string in statements:

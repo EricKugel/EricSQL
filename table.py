@@ -43,7 +43,7 @@ class Table():
         except:
             raise Exception(f"Invalid column \'{column}\'")
         
-        return self.schema[i],self.columns[i]
+        return self.schema[i], self.columns[i]
 
 
     def __str__(self):
