@@ -8,6 +8,7 @@ class Function():
             self.tokens = tokens
 
 class Count(Function):
+    args = 1
     def execute(self, table):
         distinct = self.tokens[0].type == "operator" and self.tokens[0].value == "distinct"
         if distinct:
@@ -29,6 +30,7 @@ class Count(Function):
 # TODO: Expressions
 # TODO: What is numeric?
 class Sum(Function):
+    args = 1
     def execute(self, table):
         scheme, column = table.find_column(self.tokens[0].value)
         if scheme[1] not in ["int"]:

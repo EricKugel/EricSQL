@@ -7,6 +7,7 @@ class Clause():
     def __init__(self, tokens):
         self.tokens = tokens
 
+# TODO: Multiple sources (i.e. more than one table)
 class From(Clause):
     def get_table(self, database):
         from query import create_queries

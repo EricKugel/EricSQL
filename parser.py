@@ -2,15 +2,21 @@ from collections import namedtuple
 
 Token = namedtuple("Token", ["type", "value"])
 
+alphabet = "abcdefghijklmnopqrstuvwxyz"
+alphaBET = alphabet + alphabet.upper()
+variables = alphaBET + "_."
+
+numbers = "0.123456789"
+
 statements = ["select", "select distinct", "insert into", "update", "delete"]
-clauses = ["where", "values", "group by", "having", "top", "from", "order by", "join"]
-operators = ["distinct", "and", "or", "not", "like", "in", "between", "=", "union", "union all", ">", "<", ">=", "<=", "!=", "*", "asc", "desc"]
+clauses = ["where", "values", "group by", "having", "top", "from", "order by", "join", "union", "union all"]
+operators = ["distinct", "and", "or", "not", "like", "in", "between", "as", "=", ">", "<", ">=", "<=", "!=", "*", "+", "-", "%", "/", "//", "asc", "desc"]
 functions = ["count", "sum", "min", "max", "avg"]
 keywords = statements + clauses + operators + functions
 
 unsupported = ["as"]
 
-special_operators = [",", ";"]
+special_operators = [",", ";", "=", ">", "<", "!", "*", "+", "-", "%", "/"]
 
 open_char_to_close = {
     '"': '"',
@@ -26,7 +32,7 @@ def create_token(token_string):
         except ValueError:
             return False
 
-    if token_string in special_operators:
+    if token_string in [",", ";"]:
         return Token("special", token_string)
     elif token_string[0] in ["'", '"']:
         return Token("string", token_string[1:-1].replace("\\'", "'"))
@@ -61,21 +67,28 @@ def condense(tokens):
     tokens = new_tokens
     new_tokens = []
     skip_next = False
+
+    def join(new_value):
+        nonlocal skip_next
+        if new_value in statements:
+            new_tokens.append(Token("statement", new_value))
+        elif new_value in clauses:
+            new_tokens.append(Token("clause", new_value))
+        elif new_value in operators:
+            new_tokens.append(Token("operator", new_value))
+        elif new_value in functions:
+            new_tokens.append(Token("function", new_value))
+        skip_next = True
+
     for i, token in enumerate(tokens):
         if skip_next:
             skip_next = False
             continue
         if token.type in {"statement", "clause", "operator", "function", "unknown"} and i < len(tokens) - 1 and tokens[i + 1].type in {"statement", "clause", "operator", "function", "unknown"}:
             if (new_value := (token.value + " " + tokens[i + 1].value).lower()) in keywords:
-                if new_value in statements:
-                    new_tokens.append(Token("statement", new_value))
-                elif new_value in clauses:
-                    new_tokens.append(Token("clause", new_value))
-                elif new_value in operators:
-                    new_tokens.append(Token("operator", new_value))
-                elif new_value in functions:
-                    new_tokens.append(Token("function", new_value))
-                skip_next = True
+                join(new_value)
+            elif (new_value := (token.value + tokens[i + 1].value).lower()) in keywords:
+                join(new_value)
             else:
                 new_tokens.append(token)
         else:
@@ -168,4 +181,4 @@ def tokenize(query_string):
     return tokens
 
 if __name__ == "__main__":
-    print(tokenize("1, 2, 3"))
+    print(tokenize("1+2*PRICE>=SALE"))
