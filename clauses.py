@@ -42,7 +42,7 @@ class OrderBy(Clause):
         found_columns = result.search_for_columns(columns)
 
         sorted_data = result.data.sort_values(by = found_columns, ascending = ascending)
-        return Table.create_from_table("result", schema = result.schema, data = sorted_data)
+        return Table.create_from_table("result", result.columns, sorted_data)
     
 class Values(Clause):
     def get_rows(self, columns):

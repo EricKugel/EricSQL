@@ -30,8 +30,10 @@ def separate_by_commas(tokens):
 
     return groups
 
-def check_for_alias(tokens):
-    if tokens[-2].type == "operator" and tokens[-2].value == "as":
-        return tokens[-1].value
+def check_for_alias(tokens, table):
+    if len(tokens) > 1 and tokens[-2].type == "operator" and tokens[-2].value == "as":
+        return tokens[-1].value, True
     elif len(tokens) == 1 and tokens[0].type in {"unknown", "string", "number"}:
-        return tokens[0].value
+        if tokens[0].type == "unknown":
+            return table.find_column(tokens[0].value)[1], False
+        return tokens[0].value, False

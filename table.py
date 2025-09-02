@@ -5,10 +5,11 @@ class Table():
         self.name = name
         self.read_in(data if data else {"schema": [], "records": []})
 
-    def create_from_table(name, schema, data):
+    def create_from_table(name, columns, data):
         table = Table(name)
-        table.schema = schema
+        table.schema = [[column, "unknown"] for column in columns]
         table.columns = [scheme[0] for scheme in table.schema]
+        # data = data.replace({float('nan'): None})
         table.data = data
         return table
     
@@ -19,6 +20,7 @@ class Table():
         self.schema = data["schema"]
         self.columns = [scheme[0] for scheme in self.schema]
         self.data = pd.DataFrame(data["records"], columns = self.columns)
+        # self.data = self.data.replace({float('nan'): None})
 
     def get_lowered_columns(self):
         return list(map(str.lower, self.columns))

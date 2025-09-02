@@ -29,59 +29,49 @@ class Select(Statement):
         where_clause = self.find_clause(Where, optional=True)
         table = from_clause.get_table(database)
 
+        if self.tokens[0].type == "operator" and self.tokens[0].value == "*":
+            return Table.create_from_table("result", table.columns, table.data[:])
+
         aggregate = engine.check_for_aggregate(self.tokens)
         columns = helpers.separate_by_commas(self.tokens)
         if aggregate:
             for column in columns:
-                if not check_for_aggregate(column):
+                if not engine.check_for_aggregate(column):
                     # TODO Check for GROUP BY
                     raise Exception("Columns and aggregate functions can't be mixed without a GROUP BY clause")
                 
-        aliases = [None * len(columns)]
+        aliases = []
         for i, column in enumerate(columns):
-            if (alias := helpers.check_for_alias(column)):
-                aliases[i] = alias
-    
+            alias, cut = helpers.check_for_alias(column, table)
+            if alias:
+                aliases.append(alias)
+                if cut:
+                    columns[i] = column[:-2]
+            else:
+                aliases.append(f"column{i}")
+            
         output_functions = [engine.create_function(column, table, aggregate) for column in columns]
 
         if aggregate:
-            result = []
-
-
-        # if self.tokens[0].type == "function":
-        #     function_outputs = []
-        #     for i in range(len(self.tokens) // 2):
-        #         if self.tokens[i * 2].type != "function":
-        #             raise Exception("Columns and aggregate functions can't be mixed without a GROUP BY clause")
-
-        #         func = function_factory(self.tokens[i * 2:i * 2 + 2])
-        #         function_outputs.append(func.execute(table))
-        #     return function_outputs if len(function_outputs) > 1 else function_outputs[0]
-
-        columns = self.tokens[0]
-        if self.tokens[0].type == "operator" and columns.value == "*":
-            selected_columns = table.columns
+            data = [[output_function(table=table) for output_function in output_functions]]
         else:
-            selected_columns = list(map(lambda t: t.value, flatten_tokens(self.tokens)))
-            selected_columns = table.search_for_columns(selected_columns)
-
-        selected_schema = []
-        for scheme in table.schema:
-            if scheme[0] in selected_columns:
-                selected_schema.append(scheme)
+            data = []
+            for _, row in table.data.iterrows():
+                data.append([output_function(row.to_dict()) for output_function in output_functions])
+        data = pd.DataFrame(data, columns=aliases)
 
         if where_clause:
             selected_rows = where_clause.find(table)
-            return Table.create_from_table("result", selected_schema, table.data[selected_columns][selected_rows])
-        
-        return Table.create_from_table("result", selected_schema, table.data[selected_columns])
+            return Table.create_from_table("result", aliases, data[selected_rows])
+        return Table.create_from_table("result", aliases, data)
 
 class SelectDistinct(Statement):
+
     def execute(self, database):
         new_statement = Select(self.tokens)
         new_statement.clauses = self.clauses
         result = new_statement.execute(database)
-        return Table.create_from_table("result", schema = result.schema, data = result.data.drop_duplicates())
+        return Table.create_from_table("result", result.columns, result.data.drop_duplicates())
     
 class InsertInto(Statement):
     def execute(self, database):
