@@ -67,5 +67,5 @@ class Where(Clause):
         return result
 
     def find(self, result):
-        tester = create_function(self.tokens, result)
+        tester = create_function(self.tokens, result, False)
         return result.data.apply(lambda row: tester(row.to_dict()), axis=1)

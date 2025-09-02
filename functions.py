@@ -1,5 +1,7 @@
 from helpers import flatten_tokens
 
+aggregate_functions = ["Max", "Min"]
+
 class Function():
     def __init__(self, tokens):
         if len(tokens) == 1 and tokens[0].type == "group":

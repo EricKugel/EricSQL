@@ -5,7 +5,8 @@ import pandas as pd
 
 from table import Table
 
-from engine import flatten_tokens
+import helpers
+import engine
 
 function_factory = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))(f[1:])
 
@@ -28,15 +29,34 @@ class Select(Statement):
         where_clause = self.find_clause(Where, optional=True)
         table = from_clause.get_table(database)
 
-        if self.tokens[0].type == "function":
-            function_outputs = []
-            for i in range(len(self.tokens) // 2):
-                if self.tokens[i * 2].type != "function":
+        aggregate = engine.check_for_aggregate(self.tokens)
+        columns = helpers.separate_by_commas(self.tokens)
+        if aggregate:
+            for column in columns:
+                if not check_for_aggregate(column):
+                    # TODO Check for GROUP BY
                     raise Exception("Columns and aggregate functions can't be mixed without a GROUP BY clause")
+                
+        aliases = [None * len(columns)]
+        for i, column in enumerate(columns):
+            if (alias := helpers.check_for_alias(column)):
+                aliases[i] = alias
+    
+        output_functions = [engine.create_function(column, table, aggregate) for column in columns]
 
-                func = function_factory(self.tokens[i * 2:i * 2 + 2])
-                function_outputs.append(func.execute(table))
-            return function_outputs if len(function_outputs) > 1 else function_outputs[0]
+        if aggregate:
+            result = []
+
+
+        # if self.tokens[0].type == "function":
+        #     function_outputs = []
+        #     for i in range(len(self.tokens) // 2):
+        #         if self.tokens[i * 2].type != "function":
+        #             raise Exception("Columns and aggregate functions can't be mixed without a GROUP BY clause")
+
+        #         func = function_factory(self.tokens[i * 2:i * 2 + 2])
+        #         function_outputs.append(func.execute(table))
+        #     return function_outputs if len(function_outputs) > 1 else function_outputs[0]
 
         columns = self.tokens[0]
         if self.tokens[0].type == "operator" and columns.value == "*":

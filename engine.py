@@ -42,9 +42,10 @@ def shunting_yard(tokens):
     output.extend(stack[::-1])
     return output
 
-def create_function(tokens, table):
+def create_function(tokens, table, aggregate):
     tokens = shunting_yard(tokens)
     new_tokens = []
+
     for token in tokens:
         if token.type == "unknown":
             _, name = table.find_column(token.value)
@@ -52,6 +53,11 @@ def create_function(tokens, table):
         else:
             new_tokens.append(token)
     return lambda args: evaluate(new_tokens, args)
+
+def check_for_aggregate(tokens):
+    def is_aggregate(token):
+        return token.type == "function" and token.value in aggregate_functions
+    return any(map(is_aggregate, tokens))
 
 def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
