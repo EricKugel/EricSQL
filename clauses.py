@@ -62,7 +62,6 @@ class Values(Clause):
         return rows
     
 class Where(Clause):
-    snoop = True
     def snoop_callback(self, result):
         result.data = result.data[self.find(result)]
         return result

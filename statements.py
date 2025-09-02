@@ -25,6 +25,7 @@ class Statement():
 class Select(Statement):
     def execute(self, database):
         from_clause = self.find_clause(From)
+        where_clause = self.find_clause(Where, optional=True)
         table = from_clause.get_table(database)
 
         if self.tokens[0].type == "function":
@@ -48,6 +49,10 @@ class Select(Statement):
         for scheme in table.schema:
             if scheme[0] in selected_columns:
                 selected_schema.append(scheme)
+
+        if where_clause:
+            selected_rows = where_clause.find(table)
+            return Table.create_from_table("result", selected_schema, table.data[selected_columns][selected_rows])
         
         return Table.create_from_table("result", selected_schema, table.data[selected_columns])
 
@@ -82,6 +87,5 @@ class Delete(Statement):
         if not where_clause:
             table.data = table.data.head(0)
         else:
-            where_clause.stop_snooping()
             rows = where_clause.find(table)
             table.data = table.data[~rows]

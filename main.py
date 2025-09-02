@@ -27,7 +27,7 @@ else:
 db = Database(db_file)
 print("Starting database " + db.name)
 
-for query in query.create_queries(parser.tokenize("""SELECT * FROM Customers"""), db):
+for query in query.create_queries(parser.tokenize("""SELECT CONTACTNAME FROM Customers WHERE customerid < 4"""), db):
     print(query.execute())
 
 db.write_out()
