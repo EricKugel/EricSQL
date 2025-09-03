@@ -53,7 +53,7 @@ class Select(Statement):
         output_functions = [engine.create_function(column, table, aggregate) for column in columns]
 
         if aggregate:
-            data = [[output_function(table=table) for output_function in output_functions]]
+            data = [[output_function(table.to_dict(orient="series")) for output_function in output_functions]]
         else:
             data = []
             for _, row in table.data.iterrows():

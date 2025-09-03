@@ -52,7 +52,7 @@ def create_function(tokens, table, aggregate):
             new_tokens.append(Token("unknown", name))
         else:
             new_tokens.append(token)
-    return lambda args: evaluate(new_tokens, args)
+    return lambda args: evaluate(new_tokens, args, aggregate)
 
 def check_for_aggregate(tokens):
     def not_is_aggregate(token):
@@ -63,11 +63,12 @@ def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
 
 # TODO Logic for aggregates!
-def evaluate(tokens, args):
+def evaluate(tokens, args, aggregate):
     stack = []
     for token in tokens:
         if token.type not in ["operator", "function"]:
             if token.type == "unknown":
+                # If aggregate, this basically is just a series of the column.
                 token = Token("unknown", args[token.value])
             stack.append(token.value)
         else:
