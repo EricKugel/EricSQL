@@ -56,7 +56,7 @@ def create_function(tokens, table, aggregate):
 
 def check_for_aggregate(tokens):
     def not_is_aggregate(token):
-        return token.type == "function" and token.value not in aggregate_functions
+        return token.type != "function" or token.value.lower() not in aggregate_functions
     return all(map(not_is_aggregate, tokens))
 
 def get_dependencies(tokens):
