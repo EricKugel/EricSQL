@@ -33,6 +33,10 @@ def shunting_yard(tokens):
             output.extend(shunting_yard(token.value))
             output.extend(function_stack[::-1])
             function_stack = []
+        elif token.type == "preevaluated":
+            output.append(token)
+            output.extend(function_stack[::-1])
+            function_stack = []
         elif token.type == "special":
             output.extend(stack[::-1])
             stack = []
@@ -42,16 +46,15 @@ def shunting_yard(tokens):
     output.extend(stack[::-1])
     return output
 
+# TODO What is a case???
+# TODO Preprocess aggregate functions which need column pairs (like covar)
 def create_function(tokens, table, aggregate):
-    def create_non_aggregate_function(tokens, table):
-        pass
-
     # If this is aggregate, we actually need 2 functions:
-    #   1) Outer-level evaluation
-    #   2) Inner-aggregate evaluation, which is basically just a non-aggregate evaluation
+    #   1) Inner-aggregate evaluation, which is basically just a non-aggregate evaluation
+    #   2) Outer-level evaluation
 
     if aggregate:
-        # Condense whatever's in the function to just one row
+        # Condense whatever's inside the function to one column
         new_tokens = []
         skip_next = False
         for i in range(len(tokens)):
@@ -60,11 +63,16 @@ def create_function(tokens, table, aggregate):
                 continue
 
             token = tokens[i]
+            new_tokens.append(token)
             if token.type == "function" and token.value in aggregate_functions:
+                skip_next = True
                 arg_tokens = tokens[i + 1].value
                 inner_func = create_function(arg_tokens, table, False)
-                new_tokens.append(token)
-                
+                inner_row = []
+                for _, row in table.data.iterrows():
+                    inner_row.append(inner_func(row.to_dict()))
+                new_tokens.append(Token("preevaluated", inner_row))
+        tokens = new_tokens
 
     tokens = shunting_yard(tokens)
     new_tokens = []
@@ -75,7 +83,7 @@ def create_function(tokens, table, aggregate):
             new_tokens.append(Token("unknown", name))
         else:
             new_tokens.append(token)
-    return lambda args: evaluate(new_tokens, args, aggregate)
+    return lambda args: evaluate(new_tokens, args, table)
 
 def check_for_aggregate(tokens):
     def is_aggregate(token):
@@ -98,7 +106,7 @@ def evaluate(tokens, args, table):
             func = None
             num_args = None
             if token.type == "function":
-                func_class = function_find_class(token)()
+                func_class = function_find_class(token)
                 func = func_class.execute
                 num_args = func_class.args
             else:
@@ -107,7 +115,8 @@ def evaluate(tokens, args, table):
 
             args = stack[-num_args:]
             stack = stack[:-num_args]
-            stack.append(func(*args, table))
+
+            stack.append(func(*args, table) if token.type == "function" else func(*args))
 
     return stack[0]
 

@@ -23,7 +23,6 @@ class Statement():
             raise Exception(f"{self.__class__.__name__} statements require a {clause_type.__name__} clause")
         return None
 
-# TODO: Aggregate functions are parsed separately?
 class Select(Statement):
     def execute(self, database):
         from_clause = self.find_clause(From)
@@ -31,6 +30,8 @@ class Select(Statement):
         table = from_clause.get_table(database)
 
         if self.tokens[0].type == "operator" and self.tokens[0].value == "*":
+            if where_clause:
+                return Table.create_from_table("result", table.columns, table.data[:][where_clause.find(table)])
             return Table.create_from_table("result", table.columns, table.data[:])
 
         aggregate = engine.check_for_aggregate(self.tokens)
@@ -55,7 +56,7 @@ class Select(Statement):
         output_functions = [engine.create_function(column, table, aggregate) for column in columns]
 
         if aggregate:
-            data = [[output_function(table.data.to_dict(orient="series")) for output_function in output_functions]]
+            data = [[output_function({}) for output_function in output_functions]]
         else:
             data = []
             for _, row in table.data.iterrows():
@@ -63,7 +64,9 @@ class Select(Statement):
         data = pd.DataFrame(data, columns=aliases)
 
         if where_clause:
-            selected_rows = where_clause.find(table)
+            search_table_data = pd.concat([table.data, data], axis = 1)
+            search_table = Table.create_from_table("search", table.columns + aliases, search_table_data)
+            selected_rows = where_clause.find(search_table)
             return Table.create_from_table("result", aliases, data[selected_rows])
         return Table.create_from_table("result", aliases, data)
 
