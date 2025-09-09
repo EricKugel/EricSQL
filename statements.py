@@ -43,8 +43,9 @@ class Select(Statement):
                 
         aliases = []
         for i, column in enumerate(columns):
-            alias, cut = helpers.check_for_alias(column, table)
-            if alias:
+            alias_and_cut = helpers.check_for_alias(column, table)
+            if alias_and_cut:
+                alias, cut = alias_and_cut
                 aliases.append(alias)
                 if cut:
                     columns[i] = column[:-2]
@@ -54,7 +55,7 @@ class Select(Statement):
         output_functions = [engine.create_function(column, table, aggregate) for column in columns]
 
         if aggregate:
-            data = [[output_function(table.to_dict(orient="series")) for output_function in output_functions]]
+            data = [[output_function(table.data.to_dict(orient="series")) for output_function in output_functions]]
         else:
             data = []
             for _, row in table.data.iterrows():

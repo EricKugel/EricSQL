@@ -55,6 +55,9 @@ def create_token(token_string):
         return Token("unknown", token_string)
 
 def condense(tokens):
+    if len(tokens) == 1 and tokens[0].value == "*":
+        return [Token("extra-special", "*")]
+
     new_tokens = []
     for token in tokens:
         if token.type == "group":

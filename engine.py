@@ -25,9 +25,9 @@ def shunting_yard(tokens):
                 output.append(stack.pop())
             stack.append(token)
         elif token.type == "function":
-            func_class = function_find_class(token)
-            if not func_class.scalar:
-                raise Exception("Something went wrong. This should be scalar.")
+            # func_class = function_find_class(token)
+            # if not func_class.scalar:
+            #     raise Exception("Something went wrong. This should be scalar.")
             function_stack.append(token)
         elif token.type == "group":
             output.extend(shunting_yard(token.value))
@@ -43,6 +43,29 @@ def shunting_yard(tokens):
     return output
 
 def create_function(tokens, table, aggregate):
+    def create_non_aggregate_function(tokens, table):
+        pass
+
+    # If this is aggregate, we actually need 2 functions:
+    #   1) Outer-level evaluation
+    #   2) Inner-aggregate evaluation, which is basically just a non-aggregate evaluation
+
+    if aggregate:
+        # Condense whatever's in the function to just one row
+        new_tokens = []
+        skip_next = False
+        for i in range(len(tokens)):
+            if skip_next:
+                skip_next = False
+                continue
+
+            token = tokens[i]
+            if token.type == "function" and token.value in aggregate_functions:
+                arg_tokens = tokens[i + 1].value
+                inner_func = create_function(arg_tokens, table, False)
+                new_tokens.append(token)
+                
+
     tokens = shunting_yard(tokens)
     new_tokens = []
 
@@ -63,7 +86,7 @@ def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
 
 # TODO Logic for aggregates!
-def evaluate(tokens, args, aggregate):
+def evaluate(tokens, args, table):
     stack = []
     for token in tokens:
         if token.type not in ["operator", "function"]:
@@ -75,7 +98,7 @@ def evaluate(tokens, args, aggregate):
             func = None
             num_args = None
             if token.type == "function":
-                func_class = function_find_class(token)
+                func_class = function_find_class(token)()
                 func = func_class.execute
                 num_args = func_class.args
             else:
@@ -84,7 +107,7 @@ def evaluate(tokens, args, aggregate):
 
             args = stack[-num_args:]
             stack = stack[:-num_args]
-            stack.append(func(*args))
+            stack.append(func(*args, table))
 
     return stack[0]
 

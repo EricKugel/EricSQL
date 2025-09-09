@@ -3,39 +3,20 @@ from helpers import flatten_tokens
 aggregate_functions = ["max", "min", "count"]
 
 class Function():
-    def __init__(self, tokens):
-        if len(tokens) == 1 and tokens[0].type == "group":
-            self.tokens = tokens[0].value
-        else:
-            self.tokens = tokens
+    pass
 
 class Count(Function):
     args = 1
-    def execute(self, table):
-        if token.type != "operator" or token.value != "*":
+    def execute(token_value, table):
+        if token_value != "*":
             # TODO: The exceptions write themselves
             raise Exception("I'm really sorry but functions like COUNT with a variable number of arguments are soooo much work to implement. Would you mind using syntax like this instead, with just an asterisk? SELECT COUNT(*) FROM (SELECT DISTINCT CustomerID FROM Customers)")
-
-        distinct = self.tokens[0].type == "operator" and self.tokens[0].value == "distinct"
-        if distinct:
-            self.tokens = self.tokens[1:]
-
-        columns = self.tokens[0]
-        if self.tokens[0].type == "operator" and columns.value == "*":
-            selected_columns = table.columns
-        else:
-            selected_columns = list(map(lambda t: t.value, flatten_tokens(self.tokens)))
-            selected_columns = table.search_for_columns(selected_columns)
-
-        df = table.data[selected_columns]
-        if distinct:
-            df = df.drop_duplicates()
         
-        return len(df)
+        return len(table.data)
     
 class Min(Function):
     args = -1
-    def execute(self, table):
+    def execute(row, table):
         pass
 
 # TODO: Expressions
