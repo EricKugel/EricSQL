@@ -23,6 +23,7 @@ class Statement():
             raise Exception(f"{self.__class__.__name__} statements require a {clause_type.__name__} clause")
         return None
 
+# TODO: Aggregate functions are parsed separately?
 class Select(Statement):
     def execute(self, database):
         from_clause = self.find_clause(From)
@@ -66,7 +67,6 @@ class Select(Statement):
         return Table.create_from_table("result", aliases, data)
 
 class SelectDistinct(Statement):
-
     def execute(self, database):
         new_statement = Select(self.tokens)
         new_statement.clauses = self.clauses
