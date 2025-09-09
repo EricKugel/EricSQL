@@ -56,6 +56,9 @@ class Values(Clause):
             else:
                 values.append(token.value)
         
+        if len(values) % len(columns) != 0:
+            raise Exception("Wrong number of values in INSERT INTO statement")
+
         rows = []
         for i in range(0, len(values), (length := len(columns))):
             rows.append(values[i:i + length])

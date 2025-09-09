@@ -162,7 +162,7 @@ def tokenize(query_string):
             flush()
             token += char
             flush()
-        elif char in open_char_to_close:
+        elif char in open_char_to_close and not (len(token) > 0 and token[-1] == "\\"):
             flush()
             opening, closing = char, open_char_to_close[char]
             left = 1
