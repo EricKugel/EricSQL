@@ -8,7 +8,7 @@ variables = alphaBET + "_."
 
 numbers = "0.123456789"
 
-statements = ["select", "select distinct", "insert into", "update", "delete"]
+statements = ["backup", "select", "select distinct", "insert into", "update", "delete"]
 clauses = ["where", "values", "group by", "having", "top", "from", "order by", "join", "union", "union all"]
 operators = ["distinct", "and", "or", "not", "like", "in", "between", "as", "=", ">", "<", ">=", "<=", "!=", "*", "+", "-", "%", "/", "//", "asc", "desc"]
 functions = ["count", "sum", "min", "max", "avg"]

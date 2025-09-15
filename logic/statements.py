@@ -103,3 +103,7 @@ class Delete(Statement):
         else:
             rows = where_clause.find(table)
             table.data = table.data[~rows]
+
+class Backup(Statement):
+    def execute(self, database):
+        database.write_out()

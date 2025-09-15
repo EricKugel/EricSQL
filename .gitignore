@@ -2,3 +2,5 @@
 .env
 
 nohup.out
+
+MySQL.db
