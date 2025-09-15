@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 import os
 
-load_dotenv(dotenv_path = '../.env.local')
+load_dotenv(find_dotenv())
 
 HOST = "127.0.0.1"
 PORT = 8000
