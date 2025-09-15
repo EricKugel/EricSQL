@@ -38,7 +38,7 @@ db = Database(db_file)
 print("Starting database " + db.name)
 app = server.init(handle_query)
 
-# I know I should use gunicorn but I need a MVP up fast so I'm just going to use the dev server 😖 sorry
-app.run(host=server.HOST, port=server.PORT)
+if __name__ == "__main__":
+    app.run(host=server.HOST, port=server.PORT)
 
 db.write_out()
