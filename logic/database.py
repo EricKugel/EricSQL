@@ -3,7 +3,7 @@ from pathlib import Path
 
 import json
 
-from table import Table
+from logic.table import Table
 
 class DatabaseException(Exception):
     pass

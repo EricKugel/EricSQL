@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
 
-from database import Database
+from logic.database import Database
 
-import parser
-import query
+import logic.parser
+import logic.query
+
+from server import server
 
 cwd = Path.cwd()
 
@@ -24,10 +26,17 @@ if not databases:
 else:
     db_file = databases[0]
 
+# """SELECT * From Customers ORDER BY City ASC CustomerID DESC"""
+def handle_query(query_string):
+    results = []
+    for query in logic.query.create_queries(logic.parser.tokenize(query_string), db):
+        results.append(str(query.execute()))
+    return results
+
 db = Database(db_file)
 print("Starting database " + db.name)
+app = server.init(handle_query)
 
-for query in query.create_queries(parser.tokenize("""SELECT * From Customers ORDER BY City ASC CustomerID DESC"""), db):
-    print(query.execute())
+app.run(host=server.HOST, port=server.PORT)
 
 db.write_out()

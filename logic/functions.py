@@ -1,4 +1,4 @@
-from helpers import flatten_tokens
+from logic.helpers import flatten_tokens
 
 import pandas as pd
 

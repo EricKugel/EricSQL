@@ -1,12 +1,12 @@
-from clauses import *
-from functions import *
+from logic.clauses import *
+from logic.functions import *
 
 import pandas as pd
 
-from table import Table
+from logic.table import Table
 
-import helpers
-import engine
+import logic.helpers
+import logic.engine
 
 function_factory = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))(f[1:])
 
@@ -34,17 +34,17 @@ class Select(Statement):
                 return Table.create_from_table("result", table.columns, table.data[:][where_clause.find(table)])
             return Table.create_from_table("result", table.columns, table.data[:])
 
-        aggregate = engine.check_for_aggregate(self.tokens)
-        columns = helpers.separate_by_commas(self.tokens)
+        aggregate = logic.engine.check_for_aggregate(self.tokens)
+        columns = logic.helpers.separate_by_commas(self.tokens)
         if aggregate:
             for column in columns:
-                if not engine.check_for_aggregate(column):
+                if not logic.engine.check_for_aggregate(column):
                     # TODO Check for GROUP BY
                     raise Exception("Columns and aggregate functions can't be mixed without a GROUP BY clause")
                 
         aliases = []
         for i, column in enumerate(columns):
-            alias_and_cut = helpers.check_for_alias(column, table)
+            alias_and_cut = logic.helpers.check_for_alias(column, table)
             if alias_and_cut:
                 alias, cut = alias_and_cut
                 aliases.append(alias)
@@ -53,7 +53,7 @@ class Select(Statement):
             else:
                 aliases.append(f"column{i}")
             
-        output_functions = [engine.create_function(column, table, aggregate) for column in columns]
+        output_functions = [logic.engine.create_function(column, table, aggregate) for column in columns]
 
         if aggregate:
             data = [[output_function({}) for output_function in output_functions]]

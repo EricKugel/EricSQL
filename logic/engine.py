@@ -1,9 +1,9 @@
 from inspect import signature
 
-from operators import lambdas, precedence
-from functions import *
+from logic.operators import lambdas, precedence
+from logic.functions import *
 
-from parser import Token
+from logic.parser import Token
 
 function_factory = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))(f[1:])
 function_find_class = lambda f: eval("".join(map(str.capitalize, f.value.split(" "))))

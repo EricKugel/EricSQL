@@ -1,14 +1,14 @@
-import parser
+import logic.parser
 
-from table import Table
-from parser import Token
+from logic.table import Table
+from logic.parser import Token
 
 import pandas as pd
 
-from statements import *
-from operators import *
-from clauses import *
-from functions import *
+from logic.statements import *
+from logic.operators import *
+from logic.clauses import *
+from logic.functions import *
 
 class Query():
     def __init__(self, database, statement, clauses):
@@ -69,5 +69,5 @@ def create_queries(tokens, database):
     return queries
 
 if __name__ == "__main__":
-    for query in create_queries(parser.tokenize("SELECT CustomerName, City FROM Customers;")):
+    for query in create_queries(logic.parser.tokenize("SELECT CustomerName, City FROM Customers;")):
         print(query.execute())

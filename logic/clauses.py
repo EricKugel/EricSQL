@@ -1,7 +1,7 @@
-from engine import *
-from helpers import flatten_tokens
+from logic.engine import *
+from logic.helpers import flatten_tokens
 
-from table import Table
+from logic.table import Table
 
 class Clause():
     snoop = False
@@ -17,7 +17,7 @@ class Clause():
 # TODO: Multiple sources (i.e. more than one table)
 class From(Clause):
     def get_table(self, database):
-        from query import create_queries
+        from logic.query import create_queries
         if self.tokens[0].type == "group":
             recursive_query = create_queries(self.tokens[0].value, database)[0]
             return recursive_query.execute()
