@@ -10,6 +10,7 @@ from server import server
 
 cwd = Path.cwd()
 
+
 databases = [file for file in cwd.iterdir() if file.is_file() and os.path.basename(file).endswith("db")]
 
 if not databases:
@@ -30,13 +31,14 @@ else:
 def handle_query(query_string):
     results = []
     for query in logic.query.create_queries(logic.parser.tokenize(query_string), db):
-        results.append(str(query.execute()))
+        results.append(query.execute().data.values.tolist())
     return results
 
 db = Database(db_file)
 print("Starting database " + db.name)
 app = server.init(handle_query)
 
+# I know I should use gunicorn but I need a MVP up fast so I'm just going to use the dev server 😖 sorry
 app.run(host=server.HOST, port=server.PORT)
 
 db.write_out()
