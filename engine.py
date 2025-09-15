@@ -93,7 +93,6 @@ def check_for_aggregate(tokens):
 def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
 
-# TODO Logic for aggregates!
 def evaluate(tokens, args, table):
     stack = []
     for token in tokens:
