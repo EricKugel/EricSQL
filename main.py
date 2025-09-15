@@ -6,6 +6,8 @@ from logic.database import Database
 import logic.parser
 import logic.query
 
+import logic.table
+
 from server import server
 
 cwd = Path.cwd()
@@ -32,7 +34,7 @@ def handle_query(query_string):
     results = []
     for query in logic.query.create_queries(logic.parser.tokenize(query_string), db):
         result = query.execute()
-        if not isinstance(result, logic.Table):
+        if not isinstance(result, logic.table.Table):
             results.append("Success")
         else:
             results.append(result.data.values.tolist())
