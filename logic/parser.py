@@ -140,6 +140,7 @@ def condense(tokens):
 
 def tokenize(query_string):
     tokens = []
+    char = ""
     token = ""
 
     def flush():
@@ -152,6 +153,16 @@ def tokenize(query_string):
         nonlocal query_string
         char = query_string[0]
         query_string = query_string[1:]
+        return char
+    
+    def consume_string():
+        nonlocal query_string, token, char
+        token += char
+        opening = char
+        char = pop()
+        while char != opening or token[-1] == "\\":
+            token += char
+            char = pop()
         return char
 
     while len(query_string) > 0:
@@ -170,7 +181,12 @@ def tokenize(query_string):
                 token += char
                 char = pop()
                 if token[-1] == "\\":
-                    pass
+                    continue
+
+                if opening != '"' and char == '"':
+                    char = consume_string()
+                    continue
+
                 elif char == closing:
                     left -= 1
                 elif char == opening:
