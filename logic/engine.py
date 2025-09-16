@@ -5,9 +5,11 @@ from logic.functions import *
 
 from logic.parser import Token
 
+# These convert tokens to the actual function classes they reference
 function_factory = lambda f: eval("".join(map(str.capitalize, f[0].value.split(" "))))(f[1:])
 function_find_class = lambda f: eval("".join(map(str.capitalize, f.value.split(" "))))
 
+# Necessary for shunting-yard
 def get_precedence(operator):
     if operator in precedence:
         return precedence[operator]
@@ -30,13 +32,19 @@ def shunting_yard(tokens):
             #     raise Exception("Something went wrong. This should be scalar.")
             function_stack.append(token)
         elif token.type == "group":
+            # Parse groups recursively!
             output.extend(shunting_yard(token.value))
             output.extend(function_stack[::-1])
             function_stack = []
+        # Preevaluated are special to aggregate functions.
+        # It's necessary to preevaluate the interior of aggregate functions to
+        #   switch between aggregate and row-space
+        #   (e.g. how do you handle SELECT 2 * SUM(2 * Price)?)
         elif token.type == "preevaluated":
             output.append(token)
             output.extend(function_stack[::-1])
             function_stack = []
+        # Commas, namely
         elif token.type == "special":
             output.extend(stack[::-1])
             stack = []
@@ -48,6 +56,7 @@ def shunting_yard(tokens):
 
 # TODO What is a case???
 # TODO Preprocess aggregate functions which need column pairs (like covar)
+#       This is easier than I expect.. already mostly did this with SELECT
 def create_function(tokens, table, aggregate):
     # If this is aggregate, we actually need 2 functions:
     #   1) Inner-aggregate evaluation, which is basically just a non-aggregate evaluation
@@ -90,9 +99,11 @@ def check_for_aggregate(tokens):
         return token.type == "function" and token.value.lower() in aggregate_functions
     return any(map(is_aggregate, tokens))
 
+# TODO do I need this?
 def get_dependencies(tokens):
     return list(filter(lambda t: t.type == "unknown", tokens))
 
+# Basic evaluation with a stack. Typical for shunting-yard I think
 def evaluate(tokens, args, table):
     stack = []
     for token in tokens:

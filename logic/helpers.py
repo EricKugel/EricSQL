@@ -1,5 +1,6 @@
 # I hate having these here but circular imports are KILLING ME
 
+# Do away with parentheses
 def flatten_tokens(tokens):
     if not isinstance(tokens, list) and tokens.type != "group":
         return [tokens]
@@ -17,6 +18,7 @@ def flatten_tokens(tokens):
 
     return all_tokens
 
+# Mostly for SELECT statements, Functions with column pairs, etc
 def separate_by_commas(tokens):
     groups = []
     group = []
@@ -30,6 +32,7 @@ def separate_by_commas(tokens):
 
     return groups
 
+# Checks for aliases
 def check_for_alias(tokens, table):
     if len(tokens) > 1 and tokens[-2].type == "operator" and tokens[-2].value == "as":
         return tokens[-1].value, True

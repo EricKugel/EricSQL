@@ -1,3 +1,6 @@
+# This is my one monolith that I think I'm just going to leave as is.
+# TODO come back and try to document...
+
 from collections import namedtuple
 
 Token = namedtuple("Token", ["type", "value"])

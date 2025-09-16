@@ -5,9 +5,11 @@ import json
 
 from logic.table import Table
 
+# TODO just get rid of this
 class DatabaseException(Exception):
     pass
 
+# Clean slate!
 def create_blank(db_file, name):
     with open(db_file, "w") as file:
         file.write(json.dumps({"name": name, "tables": {}}))
